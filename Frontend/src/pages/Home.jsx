@@ -1,31 +1,34 @@
-import { Link } from "react-router";
-import { Laptop, Shirt, Watch, Headphones, ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom"; // Fixed import
+import { Laptop, Shirt, Watch, Headphones, ArrowRight, Loader2 } from "lucide-react";
+import axios from "axios";
 import ProductCard from "../components/ProductCard";
 
-const FEATURED_PRODUCTS = [
+// Fallback dummy data (Jab tak backend API ready na ho)
+const STATIC_PRODUCTS = [
   {
-    id: 1,
+    _id: "1",
     title: "Wireless Noise-Canceling Headphones",
     price: 199.99,
     category: "Electronics",
     image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80",
   },
   {
-    id: 2,
+    _id: "2",
     title: "Minimalist Smart Watch",
     price: 149.50,
     category: "Accessories",
     image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80",
   },
   {
-    id: 3,
+    _id: "3",
     title: "Classic Cotton Denim Jacket",
     price: 89.00,
     category: "Fashion",
     image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=500&q=80",
   },
   {
-    id: 4,
+    _id: "4",
     title: "Ergonomic Mechanical Keyboard",
     price: 129.99,
     category: "Electronics",
@@ -34,9 +37,32 @@ const FEATURED_PRODUCTS = [
 ];
 
 const Home = () => {
+  const [products, setProducts] = useState(STATIC_PRODUCTS);
+  const [loading, setLoading] = useState(false);
+
+  // Backend Integration Ready Structure
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        setLoading(true);
+        // Backend API URL (Apni backend route se match karein)
+        const response = await axios.get("http://localhost:5000/api/products?featured=true");
+        if (response.data && response.data.length > 0) {
+          setProducts(response.data);
+        }
+      } catch (error) {
+        console.log("Using local static data (Backend disconnected):", error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, []);
+
   return (
     <div className="home-page">
-      {/* Hero Banner Container */}
+      {/* Hero Banner Section */}
       <section className="hero-section">
         <h1>Designed For You.</h1>
         <p>Explore top-rated products with fast delivery and exclusive season discounts.</p>
@@ -45,7 +71,7 @@ const Home = () => {
         </Link>
       </section>
 
-      {/* Category Section with Grid */}
+      {/* Category Grid Section */}
       <section className="category-section">
         <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "1rem" }}>
           Shop By Category
@@ -80,11 +106,17 @@ const Home = () => {
           </Link>
         </div>
 
-        <div className="products-grid">
-          {FEATURED_PRODUCTS.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {loading ? (
+          <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
+            <Loader2 className="animate-spin" size={32} />
+          </div>
+        ) : (
+          <div className="products-grid">
+            {products.map((product) => (
+              <ProductCard key={product._id || product.id} product={product} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
